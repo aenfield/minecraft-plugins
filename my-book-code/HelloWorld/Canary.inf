@@ -1,0 +1,4 @@
+main-class = helloworld.HelloWorld
+name = HelloWorld
+author = Hylbrook
+version = 1.0

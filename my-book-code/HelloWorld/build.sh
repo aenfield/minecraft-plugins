@@ -10,14 +10,26 @@
 
 # Set the variable MCSERVER to ~/Desktop/server
 # unless it's already set
-: ${MCSERVER:="$HOME"/Desktop/minecraft-server}
+: ${MCSERVER:="$HOME/Desktop/minecraft-server"}
 
-MODS="$MCSERVER/CanaryMod.jar"
+MODS="$MCSERVER"/CanaryMod.jar
+EZ="$MCSERVER"/lib/EZPlugin.jar
+if [ "$OS" = "Windows_NT" ]
+then
+    OSPS=";"
+else
+    OSPS=":"
+fi
 
-# Make sure that the jar
+# Make sure that the library jar
 # exists and is readable
 if [ ! -r $MODS ]; then
     echo "$MODS doesn't seem to exist.  Make sure you have CanaryMod.jar installed at $MCSERVER and run again.  If your server is not at $MCSERVER, set your MCSERVER environment variable to point to the correct directory."
+    exit 1
+fi
+
+if [ ! -r $EZ ]; then
+    echo "$EZ doesn't seem to exist.  Make sure you have EZPlugin.jar installed at $MCSERVER/lib and run again."
     exit 1
 fi
 
@@ -37,17 +49,15 @@ NAME=`basename "$HERE"`
 
 # 1. Compile
 echo "Compiling with javac..."
-javac -Xlint:deprecation src/*/*/*/*/*.java -d bin -classpath "$MODS" -sourcepath src -g:lines,vars,source || exit 2
+javac -Xlint:deprecation src/*/*.java -d bin -classpath "$MODS$OSPS$EZ" -sourcepath src -g:lines,vars,source || exit 2
 
 # 2. Build the jar
 echo "Creating jar file..."
-jar -cf dist/"$NAME.jar" *.inf -C bin . || exit 3
+jar -cfm dist/"$NAME.jar" Manifest.txt *.inf -C bin . || exit 3
 
 # 3. Copy to server
-echo "Deploying jar to $MCSERVER/lib..."
-test ! -d "$MCSERVER/lib" && mkdir "$MCSERVER/lib" 
-cp dist/$NAME.jar "$MCSERVER/lib" || exit 4
+echo "Deploying jar to $MCSERVER/plugins..."
+test ! -d "$MCSERVER/plugins" && mkdir "$MCSERVER/plugins" 
+cp dist/$NAME.jar "$MCSERVER"/plugins || exit 4
 
 echo "Completed Successfully."
-
-
